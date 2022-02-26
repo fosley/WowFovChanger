@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Runtime;
 using System.Windows.Forms;
 
 
@@ -31,7 +30,6 @@ namespace WowFovChanger
         /// </summary>
         private enum Expansion
         {
-            Other = -1,
             Vanilla = 0,
             Tbc = 1,
             Wrath = 2,
@@ -40,7 +38,8 @@ namespace WowFovChanger
             Warlords = 5,
             Legion = 6,
             Bfa = 7,
-            Slands = 8
+            Slands = 8,
+            Other = 9
         }
 
         /// <summary>
@@ -49,7 +48,6 @@ namespace WowFovChanger
         /// </summary>
         private List<string> ExpansionNames = new List<string>
         {
-            "Unknown",
             "Vanilla",
             "The Burning Crusade",
             "Wrath of the Lich King",
@@ -58,7 +56,8 @@ namespace WowFovChanger
             "Warlords of Draenor",
             "Legion",
             "Battle for Azeroth",
-            "Shadowlands"
+            "Shadowlands",
+            "Unknown"
         };
 
         /// <summary>
@@ -97,8 +96,8 @@ namespace WowFovChanger
             /// <param name="fovWan">The field of view, in WoW angular units.</param>
             public FovInfo(float fovWan)
             {
-                // TODO: Check endianess and do appropriate stuff.
                 byte[] currentBytes = BitConverter.GetBytes(fovWan);
+                if (!BitConverter.IsLittleEndian) SwapEndianess(ref currentBytes); // Need to be in Little Endian format.
                 byte0 = currentBytes[0];
                 byte1 = currentBytes[1];
                 byte2 = currentBytes[2];
@@ -107,6 +106,8 @@ namespace WowFovChanger
 
             /// <summary>
             /// Creates a new instances of FovInfo using the supplied bytes.
+            /// Make sure the bytes are in LITTLE endian format.
+            /// Windows defaults to little endian, but some Linux/Mac systems are big endian.
             /// </summary>
             /// <param name="byte0">The byte with offset 0.</param>
             /// <param name="byte1">The byte with offset 1.</param>
@@ -126,8 +127,8 @@ namespace WowFovChanger
             /// <returns>A float represented by the raw bytes.</returns>
             public float ToFloat()
             {
-                // TODO: Check endianess and do appropriate stuff.
-                byte[] currentBytes = new byte[] { byte1, byte2, byte3, byte0 };
+                byte[] currentBytes = new byte[] { byte0, byte1, byte2, byte3 };
+                if (!BitConverter.IsLittleEndian) SwapEndianess(ref currentBytes);
                 return BitConverter.ToSingle(currentBytes, 0);
             }
         
@@ -150,14 +151,53 @@ namespace WowFovChanger
             {
                 fovInfo = new FovInfo();
 
+                // Split the token on the semicolon. There should be exactly 4 parts.
                 string[] parts = token.Split(';');
                 if (parts.Length != 4) return false;
 
-                if (!byte.TryParse(parts[0], out fovInfo.byte0)) return false;
-                if (!byte.TryParse(parts[1], out fovInfo.byte1)) return false;
-                if (!byte.TryParse(parts[2], out fovInfo.byte2)) return false;
-                if (!byte.TryParse(parts[3], out fovInfo.byte3)) return false;
+                // See if the values were entered as hex, like 0xC4.
+                NumberStyles[] format = new NumberStyles[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    if (parts[i].ToLower().StartsWith("0x"))
+                    {
+                        format[i] = NumberStyles.HexNumber;
+                        parts[i] = parts[i].Substring(2);
+                    }
+                    else
+                    {
+                        format[i] = NumberStyles.Any;
+                    }
+                }
+
+                // If anything fails, abort.
+                if (!byte.TryParse(parts[0], format[0], null, out fovInfo.byte0)) return false;
+                if (!byte.TryParse(parts[1], format[1], null, out fovInfo.byte1)) return false;
+                if (!byte.TryParse(parts[2], format[2], null, out fovInfo.byte2)) return false;
+                if (!byte.TryParse(parts[3], format[3], null, out fovInfo.byte3)) return false;
+
+                // Everything looks good, so call it good.
                 return true;
+            }
+
+            /// <summary>
+            /// Reverses the order of the byte array.
+            /// </summary>
+            /// <param name="array">The array whose order we're flipping.</param>
+            private static void SwapEndianess(ref byte[] array)
+            {
+                int len = array.Length;
+                int max = len - 1;
+                int half = len / 2;
+                byte temp;
+
+                // Swap everything up to the halfway point.
+                for (int i = 0; i < half; i++)
+                {
+                    temp = array[i];
+                    array[i] = array[max - i];
+                    array[max - i] = temp;
+                }
             }
 
         }
@@ -237,6 +277,7 @@ namespace WowFovChanger
                 // These values should cause exceptions if we try to use them.
                 // Better than accidentally borking someone's executable.
                 BaseAspectRatio = 0;
+                DefaultFov = new FovInfo();
                 Expansion = Expansion.Other;
                 FovRatio = 0;
                 Name = "";
@@ -249,16 +290,18 @@ namespace WowFovChanger
             /// <summary>
             /// Explicit constructor allows setting each property in one go.
             /// </summary>
-            /// <param name="baseAspectRatio"><inheritdoc cref="BaseAspectRatio"/></param>
+            /// <param name="baseAspectRatio">test1</param>
+            /// <param name="defaultFov">test</param>
             /// <param name="expansion">test</param>
             /// <param name="fovRatio">test</param>
             /// <param name="name">test</param>
             /// <param name="offset">test</param>
             /// <param name="size">test</param>
             /// <param name="version">test</param>
-            public FileInfo(float baseAspectRatio, Expansion expansion, float fovRatio, string name, int offset, int size, string version)
+            public FileInfo(float baseAspectRatio, FovInfo defaultFov, Expansion expansion, float fovRatio, string name, int offset, int size, string version)
             {
                 BaseAspectRatio = baseAspectRatio;
+                DefaultFov = defaultFov;
                 Expansion = expansion;
                 FovRatio = fovRatio;
                 this.name = name;
@@ -300,8 +343,8 @@ namespace WowFovChanger
                 // TODO: Update this if the number changes.
                 int numberOfFields = 8;
 
-                // Setup comment strings.
-                string[] comments = new string[] { "//", "REM" };
+                // Setup comment string.
+                string comments = "//";
 
                 // If the trimmed line is empty, abort.
                 line = line.Trim();
@@ -313,8 +356,11 @@ namespace WowFovChanger
                 // If there aren't enough tokens, abort.
                 if (fields.Length != numberOfFields) return false;
 
+                // Remove the whitespace from each token.
+                for (int i = 0; i < numberOfFields; i++) fields[i] = fields[i].Trim();
+
                 // If the first field is a comment, abort.
-                if (comments.Contains(fields[0])) return false;
+                if (fields[0].Substring(0,comments.Length) == comments) return false;
 
                 // Try to parse each field.
                 try
@@ -326,7 +372,12 @@ namespace WowFovChanger
                     i++; if (!Enum.TryParse(fields[i], out Expansion)) return false;
                     i++; if (!float.TryParse(fields[i], out FovRatio)) return false;
                     i++; Name = fields[i];
-                    i++; if (!int.TryParse(fields[i], out Offset)) return false;
+                    i++;
+                    bool isHex = fields[i].ToLower().StartsWith("0x"); // Allow Offset to be entered as hex.
+                    NumberStyles format = (isHex) ? NumberStyles.HexNumber : NumberStyles.Any;
+                    if (isHex) fields[i] = fields[i].Substring(2);
+                    if (!int.TryParse(fields[i], format, null, out Offset)) return false;
+
                     i++; if (!int.TryParse(fields[i], out Size)) return false;
                     i++; Version = fields[i];
 
@@ -372,7 +423,7 @@ namespace WowFovChanger
         /// <summary>
         /// The text color for the output when the message is normal.
         /// </summary>
-        private Color normalColor = System.Drawing.SystemColors.ControlText;
+        private Color normalColor = SystemColors.ControlText;
 
         /// <summary>
         /// True if the filename in txtFilename.Text is valid.
@@ -386,8 +437,17 @@ namespace WowFovChanger
         /// <summary>
         /// The current field of view bytes set by the user.
         /// </summary>
-        FovInfo currentFov = new FovInfo();
+        private FovInfo currentFov = new FovInfo();
 
+        /// <summary>
+        /// The current file selected by the user.
+        /// </summary>
+        private FileInfo currentFile = new FileInfo();
+
+        /// <summary>
+        /// True while setting txtNew.Text so it doesn't recursively change things.
+        /// </summary>
+        private bool settingFov = false;
 
         public frmMain()
         {
@@ -400,6 +460,9 @@ namespace WowFovChanger
         /// </summary>
         private void SetupComponent()
         {
+            // List needs to be initialized.
+            SupportedFiles = new List<FileInfo>();
+
             // Get file info from the appdata folder.
             if (!LoadFileInfo(FilenameInfo))
             {
@@ -412,11 +475,12 @@ namespace WowFovChanger
             }
 
             // Setup the dropdown list.
-            cboFileVersion.Items.Clear();
+            cboSupportedInfo.Items.Clear();
             for (int i = 0; i < SupportedFiles.Count; i++)
             {
-                cboFileVersion.Items.Add(SupportedFiles[i].Name);
+                cboSupportedInfo.Items.Add(SupportedFiles[i].Name);
             }
+            if (cboSupportedInfo.Items.Count > 0) cboSupportedInfo.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -447,7 +511,11 @@ namespace WowFovChanger
                 {
                     // Parse each line and add it to the array if it's valid.
                     FileInfo temp = new FileInfo();
-                    if (temp.TryParse(lines[i])) SupportedFiles.Add(temp);
+                    if (temp.TryParse(lines[i]))
+                    {
+                        SupportedFiles.Add(temp);
+                        FoundRecord = true;
+                    }
                 }
 
                 // If we found no records, abort.
@@ -469,8 +537,8 @@ namespace WowFovChanger
         private void SetupDefaultInfo()
         {
             // TODO: Add more supported executables.
-            SupportedFiles = new List<FileInfo>();
-            SupportedFiles.Add(new FileInfo(16 / 9f, Expansion.Wrath, 50, "Wrath 3.3.5a", 0x5e7588, 7704216, "3:3:12340"));
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Wrath, 50, "Wrath 3.3.5a", 0x5e7588, 7704216, "3:3:12340"));
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 32bit", 0x936888, 13154864, "5:4:8.18414"));
         }
 
         /// <summary>
@@ -516,11 +584,11 @@ namespace WowFovChanger
                     if (isFovValid) btnApply.Enabled = true;
                     lblFilename.ForeColor = normalColor;
                     lblCurrent.ForeColor = normalColor;
-                    FileInfo current = GetFileInfo(txtFilename.Text); // This gets the size and version.
-                    int match = GetMatchingExecutable(current);
+                    GetFileInfo(txtFilename.Text); // This puts the size and version into currentFile.
+                    int match = GetMatchingExecutable();
                     if (match >= 0)
                     {
-                        cboFileVersion.SelectedIndex = match;
+                        cboSupportedInfo.SelectedIndex = match;
                         GetCurrentWanBytes();
                     }
                     else
@@ -561,10 +629,47 @@ namespace WowFovChanger
             }
         }
 
+        private void cboFileVersion_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // Update all the fields for the selected item.
+                FileInfo fi = SupportedFiles[cboSupportedInfo.SelectedIndex];
+                txtAspect.Text = fi.BaseAspectRatio.ToString();
+                txtDefaultFov.Text = GetExpandedFov(fi.DefaultFov.ToFloat());
+                txtExpansion.Text = ExpansionNames[(int)fi.Expansion];
+                txtFovRatio.Text = fi.FovRatio.ToString();
+                txtOffset.Text = string.Format("{0} ({1})", GetHex(fi.Offset), fi.Offset);
+                txtFilesizeSupported.Text = GetExpandedFileSize(fi.Size);
+                txtVersionSupported.Text = fi.Version;
+
+                // If the current filename doesn't point to a valid file, abort.
+                if (!isFilenameValid) return;
+
+                // See if the selected file matched the selected file info.
+                if (fi.Matches(currentFile.Size, currentFile.Version))
+                {
+                    DisplayMessage("Selected file info matches the selected executable.");
+                }
+                else
+                {
+                    DisplayError("Selected file info doesn't match the selected executable.");
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
         private void txtNew_TextChanged(object sender, EventArgs e)
         {
             try
             {
+                if (settingFov) return;
+
                 ClearOutput();
 
                 float value;
@@ -597,8 +702,13 @@ namespace WowFovChanger
             {
                 ClearOutput();
 
-                currentFov = new FovInfo(0xDB, 0x0F, 0xC9, 0x3F);
-                txtNew.Text = currentFov.ToFloat().ToString();
+                currentFov = SupportedFiles[cboSupportedInfo.SelectedIndex].DefaultFov;
+                settingFov = true;
+                txtNew.Text = WanToDeg(currentFov.ToFloat()).ToString();
+                DisplayMessage("(" + currentFov.ToFloat().ToString() + ")");
+                settingFov = false;
+                isFovValid = true;
+                if (isFilenameValid) btnApply.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -626,29 +736,22 @@ namespace WowFovChanger
         /// </summary>
         /// <param name="filename">The executable to get info from.</param>
         /// <returns>A FileInfo object with the Size and Version set.</returns>
-        private FileInfo GetFileInfo(string filename)
+        private void GetFileInfo(string filename)
         {
-            // Get the entire file as a byte array.
-            byte[] fileBytes = File.ReadAllBytes(txtFilename.Text);
+            // TODO: Check if file is 32-bit or 64-bit then act appropriately.
 
             // Get the filesize so we can compare it to known executables.
-            int fileSize = fileBytes.Length;
-            string fileSizePretty = GetPrettyFileSize(fileSize);
-            txtFilesize.Text = String.Format("{0} ({1} bytes)", fileSizePretty, fileSize);
+            System.IO.FileInfo fi = new System.IO.FileInfo(txtFilename.Text); // Qualify the name so we're not conflicting with the local FileInfo class.
+            int fileSize = (int)fi.Length;
+            txtFilesize.Text = GetExpandedFileSize(fileSize);
 
             // Get the version to compare.
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(txtFilename.Text);
-            int major = fvi.FileMajorPart;
-            int minor = fvi.FileMinorPart;
-            int rev = fvi.FilePrivatePart;
-            string version = String.Format("{0}:{1}:{2}", major, minor, rev);
+            string version = GetPrettyVersionInfo(txtFilename.Text);
             txtVersion.Text = version;
 
-            // Return the known info so the calling function can see if it's a match for anything.
-            FileInfo result = new FileInfo();
-            result.Size = fileSize;
-            result.Version = version;
-            return result;
+            // Set the known info so the calling function can see if it's a match for anything.
+            currentFile.Size = fileSize;
+            currentFile.Version = version;
         }
 
         /// <summary>
@@ -656,18 +759,19 @@ namespace WowFovChanger
         /// </summary>
         /// <param name="current">The executable to match against.</param>
         /// <returns>The index of the supported executable if found, or -1 if no match was found.</returns>
-        private int GetMatchingExecutable(FileInfo current)
+        private int GetMatchingExecutable()
         {
             // Start with the selected executable.
-            if (SupportedFiles[cboFileVersion.SelectedIndex].Matches(current))
+            int index = cboSupportedInfo.SelectedIndex;
+            if (index >= 0 && SupportedFiles[index].Matches(currentFile))
             {
-                return cboFileVersion.SelectedIndex;
+                return cboSupportedInfo.SelectedIndex;
             }
 
             // Now look through all the supported executables.
             for (int i = 0; i < SupportedFiles.Count; i++)
             {
-                if (SupportedFiles[i].Matches(current)) return i;
+                if (SupportedFiles[i].Matches(currentFile)) return i;
             }
 
             // We found nothing.
@@ -679,7 +783,7 @@ namespace WowFovChanger
         /// </summary>
         private void GetCurrentWanBytes()
         {
-            int supportedIndex = cboFileVersion.SelectedIndex;
+            int supportedIndex = cboSupportedInfo.SelectedIndex;
 
             // Get the entire file as a byte array.
             byte[] fileBytes = File.ReadAllBytes(txtFilename.Text);
@@ -689,8 +793,8 @@ namespace WowFovChanger
             {
                 int offset = SupportedFiles[supportedIndex].Offset;
                 GetFovFromOffset(ref fileBytes, offset); // Stores offset in the currentFov var.
-                float fov = currentFov.ToFloat();
-                txtCurrent.Text = string.Format("{0:f2}° ({1} raw)", WanToDeg(fov), fov);
+                float fovWan = currentFov.ToFloat();
+                txtCurrent.Text = GetExpandedFov(fovWan);
             }
             catch (IndexOutOfRangeException ex)
             {
@@ -716,7 +820,7 @@ namespace WowFovChanger
             int hour = timestamp.Hour;
             int minute = timestamp.Minute;
             int second = timestamp.Second;
-            string timestampString = String.Format("{0:D4}-{1:D2}-{2:D2} {3:D2}:{4:D2}:{5:D2}", year, month, day, hour, minute, second);
+            string timestampString = String.Format("{0:D4}-{1:D2}-{2:D2} {3:D2}.{4:D2}.{5:D2}", year, month, day, hour, minute, second);
             for (int i = 0; i < 1000; i++)
             {
                 backupFilename = txtFilename.Text + "." + timestampString + "." + i.ToString() + ".bak";
@@ -728,7 +832,7 @@ namespace WowFovChanger
             }
 
             // Set the new fov in the bytes.
-            SetFovAtOffset(ref fileBytes, SupportedFiles[cboFileVersion.SelectedIndex].Offset);
+            SetFovAtOffset(ref fileBytes, SupportedFiles[cboSupportedInfo.SelectedIndex].Offset);
 
             // Save the bytes back to the executable.
             File.WriteAllBytes(txtFilename.Text, fileBytes);
@@ -769,7 +873,8 @@ namespace WowFovChanger
         /// <returns>The degree equivalent of fovWan.</returns>
         private float WanToDeg(float fovWan)
         {
-            float fovRatio = SupportedFiles[cboFileVersion.SelectedIndex].FovRatio;
+            // TODO: Use aspect ratio to make this more accurate.
+            float fovRatio = SupportedFiles[cboSupportedInfo.SelectedIndex].FovRatio;
             return fovWan * fovRatio;
         }
 
@@ -781,8 +886,20 @@ namespace WowFovChanger
         /// <returns>The WoW angular unit equivalent of fovDeg.</returns>
         private float DegToWan(float fovDeg)
         {
-            float fovRatio = SupportedFiles[cboFileVersion.SelectedIndex].FovRatio;
+            // TODO: Use aspect ratio to make this more accurate.
+            float fovRatio = SupportedFiles[cboSupportedInfo.SelectedIndex].FovRatio;
             return fovDeg / fovRatio;
+        }
+
+        /// <summary>
+        /// Takes a field of view, in WoW angular units, and converts
+        /// it to a string with degrees and the raw value.
+        /// </summary>
+        /// <param name="fovWan">The field of view to convert, in WoW angular units.</param>
+        /// <returns>The expanded string with both units.</returns>
+        private string GetExpandedFov(float fovWan)
+        {
+            return string.Format("{0:f2}° ({1} raw)", WanToDeg(fovWan), fovWan);
         }
 
         /// <summary>
@@ -814,5 +931,42 @@ namespace WowFovChanger
             // Return the formatted string.
             return String.Format("{0:f" + digits + "} {1}", size, suffix);
         }
+
+        /// <summary>
+        /// Takes a filesize and converts it to a pretty size plus the raw size in bytes.
+        /// </summary>
+        /// <param name="fileSize">The filesize, in bytes.</param>
+        /// <returns>A pretty string with the raw size in parentheses.</returns>
+        private string GetExpandedFileSize(int fileSize)
+        {
+            return String.Format("{0} ({1} bytes)", GetPrettyFileSize(fileSize), fileSize);
+        }
+
+        /// <summary>
+        /// Takes a filename and gets a pretty version string.
+        /// </summary>
+        /// <param name="filename">The filename of the file whose version to get.</param>
+        /// <returns>A prettified version string.</returns>
+        private string GetPrettyVersionInfo(string filename)
+        {
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filename);
+            int major = fvi.FileMajorPart;
+            int minor = fvi.FileMinorPart;
+            int rev = fvi.FileBuildPart;
+            int prv = fvi.FilePrivatePart;
+            return String.Format("{0}:{1}:{2}.{3}", major, minor, rev, prv);
+        }
+
+        /// <summary>
+        /// Converts a decimal value into a hex string with the 0x prefix.
+        /// </summary>
+        /// <param name="dec">The decimal value to convert.</param>
+        /// <returns>A hex value in a formatted string.</returns>
+        private string GetHex(int dec)
+        {
+            string hex = Convert.ToString(dec, 16);
+            return "0x" + hex;
+        }
+
     }
 }

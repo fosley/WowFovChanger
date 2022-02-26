@@ -1,0 +1,25 @@
+// Entries need to be in the format:
+// Aspect ratio, Default fov bytes, xpack shortname, fov ratio, friendly name, fov offset, filesize, file version.
+// Each entry is separated by a comma.
+// Aspect ratio is the ratio used to get the fov ratio.
+// -- If you calculated fov ratio on a 16:9 monitor, you'd put 1.777778.
+// Default fov bytes are in little endian format (the same order they're stored in the binary).
+// -- They can be represented as decimal values or hex values. E.g., 15 is 0xF.
+// -- Bytes are separated by a semi-colon.
+// Xpack shortname needs to match the hard-coded enums exactly.
+// -- Other, Vanilla, Tbc, Wrath, Cata, Mists, Warlords, Legion, Bfa, Slands.
+// Fov ratio is degrees divided by WoW angular units.
+// -- If 1.57 gives you 80°, then fov ratio is 80 / 1.57 = 50.9.
+// Friendly name is what shows up in the list in the program. It's just for convenience.
+// -- It can't have commas or you'll break the load function.
+// Fov offset is the address in the executable where the fov is stored.
+// -- It can be represented as decimal or hex. E.g., 6190472 is 0x5E7588.
+// Filesize is the size in bytes as measured by the program.
+// File version is a string with major:minor:build.private as discovered by the program.
+
+
+1.777778	,0xDB;0x0F;0xC9;0x3F	,Vanilla	,41	,Vanilla 1.12.1		,0x4089b4	,4775986	,1:12:1.5875
+1.777778	,0xDB;0x0F;0xC9;0x3F	,Tbc		,41	,TBC 2.4.3			,0x4b4004	,8272528	,2:4:3.8606
+1.777778	,0xDB;0x0F;0xC9;0x3F	,Wrath		,50	,Wrath 3.3.5a		,0x5E7588	,7704216	,3:3:5.12340
+1.777778	,0xDB;0x0F;0xC9;0x3F	,Mists		,50	,Mists 5.4.8 32bit	,0x936888	,13154864	,5:4:8.18414
+1.777778	,0xDB;0x0F;0xC9;0x3F	,Mists		,50	,Mists 5.4.8 64bit	,0x7FFFFFFF	,20915760	,5:4:8.18414
