@@ -60,6 +60,7 @@ namespace WowFovChanger
             this.lblFilesizeSupported = new System.Windows.Forms.Label();
             this.txtVersionSupported = new System.Windows.Forms.TextBox();
             this.lblVersionSupported = new System.Windows.Forms.Label();
+            this.btnRefreshOffset = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // ofdMain
@@ -83,7 +84,7 @@ namespace WowFovChanger
             this.txtFilename.Location = new System.Drawing.Point(8, 22);
             this.txtFilename.Name = "txtFilename";
             this.txtFilename.Size = new System.Drawing.Size(325, 20);
-            this.txtFilename.TabIndex = 1;
+            this.txtFilename.TabIndex = 0;
             this.txtFilename.TextChanged += new System.EventHandler(this.txtFilename_TextChanged);
             // 
             // btnFilename
@@ -105,7 +106,7 @@ namespace WowFovChanger
             this.txtCurrent.Name = "txtCurrent";
             this.txtCurrent.ReadOnly = true;
             this.txtCurrent.Size = new System.Drawing.Size(356, 20);
-            this.txtCurrent.TabIndex = 4;
+            this.txtCurrent.TabIndex = 8;
             // 
             // lblCurrent
             // 
@@ -123,7 +124,7 @@ namespace WowFovChanger
             this.txtNew.Location = new System.Drawing.Point(5, 491);
             this.txtNew.Name = "txtNew";
             this.txtNew.Size = new System.Drawing.Size(288, 20);
-            this.txtNew.TabIndex = 6;
+            this.txtNew.TabIndex = 28;
             this.txtNew.TextChanged += new System.EventHandler(this.txtNew_TextChanged);
             // 
             // lblNew
@@ -141,7 +142,7 @@ namespace WowFovChanger
             this.btnApply.Location = new System.Drawing.Point(5, 517);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 23);
-            this.btnApply.TabIndex = 8;
+            this.btnApply.TabIndex = 32;
             this.btnApply.Text = "Apply";
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
@@ -151,7 +152,7 @@ namespace WowFovChanger
             this.btnDefault.Location = new System.Drawing.Point(299, 491);
             this.btnDefault.Name = "btnDefault";
             this.btnDefault.Size = new System.Drawing.Size(62, 20);
-            this.btnDefault.TabIndex = 7;
+            this.btnDefault.TabIndex = 30;
             this.btnDefault.Text = "Default";
             this.btnDefault.UseVisualStyleBackColor = true;
             this.btnDefault.Click += new System.EventHandler(this.btnDefault_Click);
@@ -166,7 +167,7 @@ namespace WowFovChanger
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.Size = new System.Drawing.Size(275, 20);
-            this.txtOutput.TabIndex = 9;
+            this.txtOutput.TabIndex = 34;
             // 
             // cboSupportedInfo
             // 
@@ -186,7 +187,7 @@ namespace WowFovChanger
             this.txtFilesize.Name = "txtFilesize";
             this.txtFilesize.ReadOnly = true;
             this.txtFilesize.Size = new System.Drawing.Size(356, 20);
-            this.txtFilesize.TabIndex = 12;
+            this.txtFilesize.TabIndex = 4;
             // 
             // lblFilesize
             // 
@@ -205,7 +206,7 @@ namespace WowFovChanger
             this.txtVersion.Name = "txtVersion";
             this.txtVersion.ReadOnly = true;
             this.txtVersion.Size = new System.Drawing.Size(356, 20);
-            this.txtVersion.TabIndex = 14;
+            this.txtVersion.TabIndex = 6;
             // 
             // lblVersion
             // 
@@ -233,7 +234,7 @@ namespace WowFovChanger
             this.txtAspect.Name = "txtAspect";
             this.txtAspect.ReadOnly = true;
             this.txtAspect.Size = new System.Drawing.Size(356, 20);
-            this.txtAspect.TabIndex = 17;
+            this.txtAspect.TabIndex = 12;
             // 
             // lblAspect
             // 
@@ -252,7 +253,7 @@ namespace WowFovChanger
             this.txtDefaultFov.Name = "txtDefaultFov";
             this.txtDefaultFov.ReadOnly = true;
             this.txtDefaultFov.Size = new System.Drawing.Size(356, 20);
-            this.txtDefaultFov.TabIndex = 19;
+            this.txtDefaultFov.TabIndex = 14;
             // 
             // lblDefaultFov
             // 
@@ -271,7 +272,7 @@ namespace WowFovChanger
             this.txtExpansion.Name = "txtExpansion";
             this.txtExpansion.ReadOnly = true;
             this.txtExpansion.Size = new System.Drawing.Size(356, 20);
-            this.txtExpansion.TabIndex = 21;
+            this.txtExpansion.TabIndex = 16;
             // 
             // lblExpansion
             // 
@@ -290,7 +291,7 @@ namespace WowFovChanger
             this.txtFovRatio.Name = "txtFovRatio";
             this.txtFovRatio.ReadOnly = true;
             this.txtFovRatio.Size = new System.Drawing.Size(356, 20);
-            this.txtFovRatio.TabIndex = 23;
+            this.txtFovRatio.TabIndex = 18;
             // 
             // lblFovRatio
             // 
@@ -308,8 +309,8 @@ namespace WowFovChanger
             this.txtOffset.Location = new System.Drawing.Point(5, 374);
             this.txtOffset.Name = "txtOffset";
             this.txtOffset.ReadOnly = true;
-            this.txtOffset.Size = new System.Drawing.Size(356, 20);
-            this.txtOffset.TabIndex = 25;
+            this.txtOffset.Size = new System.Drawing.Size(328, 20);
+            this.txtOffset.TabIndex = 20;
             // 
             // lblOffset
             // 
@@ -328,7 +329,7 @@ namespace WowFovChanger
             this.txtFilesizeSupported.Name = "txtFilesizeSupported";
             this.txtFilesizeSupported.ReadOnly = true;
             this.txtFilesizeSupported.Size = new System.Drawing.Size(356, 20);
-            this.txtFilesizeSupported.TabIndex = 27;
+            this.txtFilesizeSupported.TabIndex = 24;
             // 
             // lblFilesizeSupported
             // 
@@ -347,7 +348,7 @@ namespace WowFovChanger
             this.txtVersionSupported.Name = "txtVersionSupported";
             this.txtVersionSupported.ReadOnly = true;
             this.txtVersionSupported.Size = new System.Drawing.Size(356, 20);
-            this.txtVersionSupported.TabIndex = 29;
+            this.txtVersionSupported.TabIndex = 26;
             // 
             // lblVersionSupported
             // 
@@ -358,11 +359,25 @@ namespace WowFovChanger
             this.lblVersionSupported.TabIndex = 28;
             this.lblVersionSupported.Text = "Version:";
             // 
+            // btnRefreshOffset
+            // 
+            this.btnRefreshOffset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRefreshOffset.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRefreshOffset.Location = new System.Drawing.Point(339, 373);
+            this.btnRefreshOffset.Name = "btnRefreshOffset";
+            this.btnRefreshOffset.Size = new System.Drawing.Size(25, 20);
+            this.btnRefreshOffset.TabIndex = 22;
+            this.btnRefreshOffset.Text = "⟳";
+            this.btnRefreshOffset.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnRefreshOffset.UseVisualStyleBackColor = true;
+            this.btnRefreshOffset.Click += new System.EventHandler(this.btnRefreshOffset_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(370, 548);
+            this.Controls.Add(this.btnRefreshOffset);
             this.Controls.Add(this.txtVersionSupported);
             this.Controls.Add(this.lblVersionSupported);
             this.Controls.Add(this.txtFilesizeSupported);
@@ -434,6 +449,7 @@ namespace WowFovChanger
         private System.Windows.Forms.Label lblFilesizeSupported;
         private System.Windows.Forms.TextBox txtVersionSupported;
         private System.Windows.Forms.Label lblVersionSupported;
+        private System.Windows.Forms.Button btnRefreshOffset;
     }
 }
 

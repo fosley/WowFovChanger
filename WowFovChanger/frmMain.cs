@@ -286,18 +286,17 @@ namespace WowFovChanger
                 Version = "";
             }
 
-            // TODO Fix this comment.
             /// <summary>
             /// Explicit constructor allows setting each property in one go.
             /// </summary>
-            /// <param name="baseAspectRatio">test1</param>
-            /// <param name="defaultFov">test</param>
-            /// <param name="expansion">test</param>
-            /// <param name="fovRatio">test</param>
-            /// <param name="name">test</param>
-            /// <param name="offset">test</param>
-            /// <param name="size">test</param>
-            /// <param name="version">test</param>
+            /// <param name="baseAspectRatio">The aspect ratio FovRatio was set at.</param>
+            /// <param name="defaultFov">The default field of view, as a sequence of bytes.</param>
+            /// <param name="expansion">The expansion of the executable.</param>
+            /// <param name="fovRatio">The ratio between degrees and WoW angular units.</param>
+            /// <param name="name">The friendly name of this WoW executable.</param>
+            /// <param name="offset">The offset of the field of view Int32, in bytes.</param>
+            /// <param name="size">The size of the file, in bytes.</param>
+            /// <param name="version">The version of the file, as a string.</param>
             public FileInfo(float baseAspectRatio, FovInfo defaultFov, Expansion expansion, float fovRatio, string name, int offset, int size, string version)
             {
                 BaseAspectRatio = baseAspectRatio;
@@ -460,7 +459,17 @@ namespace WowFovChanger
         /// </summary>
         private void SetupComponent()
         {
-            // List needs to be initialized.
+            // Load information about supported files.
+            SetupFileInfo();
+        }
+
+        /// <summary>
+        /// Load info about supported files.
+        /// Try appdata, then the program folder, then do hardcoded values, in that order.
+        /// </summary>
+        private void SetupFileInfo()
+        {
+            // Initialize the list.
             SupportedFiles = new List<FileInfo>();
 
             // Get file info from the appdata folder.
@@ -537,8 +546,11 @@ namespace WowFovChanger
         private void SetupDefaultInfo()
         {
             // TODO: Add more supported executables.
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Vanilla, 41, "Vanilla 1.12.1", 0x4089b4, 4775986, "1:12:1.5875"));
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Tbc, 41, "TBC 2.4.3", 0x4b4004, 8272528, "2:4:3.8606"));
             SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Wrath, 50, "Wrath 3.3.5a", 0x5e7588, 7704216, "3:3:12340"));
             SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 32bit", 0x936888, 13154864, "5:4:8.18414"));
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 64bit", 0x7FFFFFFF, 20915760, "5:4:8.18414"));
         }
 
         /// <summary>
@@ -709,6 +721,32 @@ namespace WowFovChanger
                 settingFov = false;
                 isFovValid = true;
                 if (isFilenameValid) btnApply.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnRefreshOffset_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Store the currently-selected index, if one exists.
+                int currentIndex = -1;
+                if (cboSupportedInfo.Items.Count > 0)
+                {
+                    currentIndex = cboSupportedInfo.SelectedIndex;
+                }
+
+                // Refresh the info from the file.
+                SetupFileInfo();
+
+                // Attempt to go back to the previously-selected index.
+                if (currentIndex >= 0 && currentIndex < cboSupportedInfo.Items.Count)
+                {
+                    cboSupportedInfo.SelectedIndex = currentIndex;
+                }
             }
             catch (Exception ex)
             {
@@ -967,6 +1005,7 @@ namespace WowFovChanger
             string hex = Convert.ToString(dec, 16);
             return "0x" + hex;
         }
+
 
     }
 }
