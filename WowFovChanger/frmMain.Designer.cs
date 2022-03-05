@@ -29,6 +29,7 @@ namespace WowFovChanger
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.ofdMain = new System.Windows.Forms.OpenFileDialog();
             this.lblFilename = new System.Windows.Forms.Label();
             this.txtFilename = new System.Windows.Forms.TextBox();
@@ -72,6 +73,10 @@ namespace WowFovChanger
             this.lblHelp2 = new System.Windows.Forms.Label();
             this.lblHelp1 = new System.Windows.Forms.Label();
             this.pnlOffsets = new System.Windows.Forms.Panel();
+            this.btnReset = new System.Windows.Forms.Button();
+            this.btnRevertAll = new System.Windows.Forms.Button();
+            this.btnSetSelected = new System.Windows.Forms.Button();
+            this.btnSetAll = new System.Windows.Forms.Button();
             this.btnFromDefault = new System.Windows.Forms.Button();
             this.btnFromFov = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -80,10 +85,6 @@ namespace WowFovChanger
             this.btnSearch = new System.Windows.Forms.Button();
             this.lblBytes = new System.Windows.Forms.Label();
             this.txtBytes = new System.Windows.Forms.TextBox();
-            this.btnSetAll = new System.Windows.Forms.Button();
-            this.btnSetSelected = new System.Windows.Forms.Button();
-            this.btnRevertAll = new System.Windows.Forms.Button();
-            this.btnReset = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.pnlHelp.SuspendLayout();
             this.pnlOffsets.SuspendLayout();
@@ -558,6 +559,50 @@ namespace WowFovChanger
             this.pnlOffsets.TabIndex = 37;
             this.pnlOffsets.Visible = false;
             // 
+            // btnReset
+            // 
+            this.btnReset.Enabled = false;
+            this.btnReset.Location = new System.Drawing.Point(87, 52);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(75, 23);
+            this.btnReset.TabIndex = 106;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // btnRevertAll
+            // 
+            this.btnRevertAll.Enabled = false;
+            this.btnRevertAll.Location = new System.Drawing.Point(183, 479);
+            this.btnRevertAll.Name = "btnRevertAll";
+            this.btnRevertAll.Size = new System.Drawing.Size(75, 23);
+            this.btnRevertAll.TabIndex = 118;
+            this.btnRevertAll.Text = "Revert All";
+            this.btnRevertAll.UseVisualStyleBackColor = true;
+            this.btnRevertAll.Click += new System.EventHandler(this.btnRevertAll_Click);
+            // 
+            // btnSetSelected
+            // 
+            this.btnSetSelected.Enabled = false;
+            this.btnSetSelected.Location = new System.Drawing.Point(87, 479);
+            this.btnSetSelected.Name = "btnSetSelected";
+            this.btnSetSelected.Size = new System.Drawing.Size(90, 23);
+            this.btnSetSelected.TabIndex = 116;
+            this.btnSetSelected.Text = "Set Selected";
+            this.btnSetSelected.UseVisualStyleBackColor = true;
+            this.btnSetSelected.Click += new System.EventHandler(this.btnSetSelected_Click);
+            // 
+            // btnSetAll
+            // 
+            this.btnSetAll.Enabled = false;
+            this.btnSetAll.Location = new System.Drawing.Point(6, 479);
+            this.btnSetAll.Name = "btnSetAll";
+            this.btnSetAll.Size = new System.Drawing.Size(75, 23);
+            this.btnSetAll.TabIndex = 114;
+            this.btnSetAll.Text = "Set All";
+            this.btnSetAll.UseVisualStyleBackColor = true;
+            this.btnSetAll.Click += new System.EventHandler(this.btnSetAll_Click);
+            // 
             // btnFromDefault
             // 
             this.btnFromDefault.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -633,50 +678,6 @@ namespace WowFovChanger
             this.txtBytes.Size = new System.Drawing.Size(188, 20);
             this.txtBytes.TabIndex = 100;
             // 
-            // btnSetAll
-            // 
-            this.btnSetAll.Enabled = false;
-            this.btnSetAll.Location = new System.Drawing.Point(6, 479);
-            this.btnSetAll.Name = "btnSetAll";
-            this.btnSetAll.Size = new System.Drawing.Size(75, 23);
-            this.btnSetAll.TabIndex = 114;
-            this.btnSetAll.Text = "Set All";
-            this.btnSetAll.UseVisualStyleBackColor = true;
-            this.btnSetAll.Click += new System.EventHandler(this.btnSetAll_Click);
-            // 
-            // btnSetSelected
-            // 
-            this.btnSetSelected.Enabled = false;
-            this.btnSetSelected.Location = new System.Drawing.Point(87, 479);
-            this.btnSetSelected.Name = "btnSetSelected";
-            this.btnSetSelected.Size = new System.Drawing.Size(90, 23);
-            this.btnSetSelected.TabIndex = 116;
-            this.btnSetSelected.Text = "Set Selected";
-            this.btnSetSelected.UseVisualStyleBackColor = true;
-            this.btnSetSelected.Click += new System.EventHandler(this.btnSetSelected_Click);
-            // 
-            // btnRevertAll
-            // 
-            this.btnRevertAll.Enabled = false;
-            this.btnRevertAll.Location = new System.Drawing.Point(183, 479);
-            this.btnRevertAll.Name = "btnRevertAll";
-            this.btnRevertAll.Size = new System.Drawing.Size(75, 23);
-            this.btnRevertAll.TabIndex = 118;
-            this.btnRevertAll.Text = "Revert All";
-            this.btnRevertAll.UseVisualStyleBackColor = true;
-            this.btnRevertAll.Click += new System.EventHandler(this.btnRevertAll_Click);
-            // 
-            // btnReset
-            // 
-            this.btnReset.Enabled = false;
-            this.btnReset.Location = new System.Drawing.Point(87, 52);
-            this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(75, 23);
-            this.btnReset.TabIndex = 106;
-            this.btnReset.Text = "Reset";
-            this.btnReset.UseVisualStyleBackColor = true;
-            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -685,6 +686,7 @@ namespace WowFovChanger
             this.Controls.Add(this.pnlOffsets);
             this.Controls.Add(this.pnlHelp);
             this.Controls.Add(this.pnlMain);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(167, 588);
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
