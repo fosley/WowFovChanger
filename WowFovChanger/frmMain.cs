@@ -11,6 +11,8 @@ namespace WowFovChanger
 {
     public partial class frmMain : Form
     {
+        // TODO: Make 64-bit versions of relevant functions in case a newer client uses 8-byte doubles.
+
         /// <summary>
         /// Where to load/save the file containing info about supported executables.
         /// </summary>
@@ -133,26 +135,35 @@ namespace WowFovChanger
             }
         
             /// <summary>
-            /// Creates a parsable string out of the raw bytes.
+            /// Creates a pretty hex string out of the raw bytes.
             /// </summary>
             /// <returns>A semi-colon-delimited array of values.</returns>
             public override string ToString()
+            {
+                return "0x" + byte0.ToString("X2") + byte1.ToString("X2") + byte2.ToString("X2") + byte3.ToString("X2");
+            }
+
+            /// <summary>
+            /// Creates a parsable string out of the raw bytes.
+            /// </summary>
+            /// <returns>A semi-colon-delimited array of values.</returns>
+            public string ToStringParsable()
             {
                 return byte0.ToString() + ";" + byte1.ToString() + ";" + byte2.ToString() + ";" + byte3.ToString() + ";";
             }
 
             /// <summary>
-            /// Attempt to parse a token for individual bytes.
+            /// Attempt to parse a string with tokens for individual bytes.
             /// </summary>
-            /// <param name="token">The string to parse.</param>
+            /// <param name="toParse">The string to parse, in the format AA;BB;CC;DD .</param>
             /// <param name="fovInfo">An instance of FovInfo with the parsed values.</param>
             /// <returns>True if successful, false otherwise.</returns>
-            public static bool TryParse(string token, out FovInfo fovInfo)
+            public static bool TryParseTokens(string toParse, out FovInfo fovInfo)
             {
                 fovInfo = new FovInfo();
 
                 // Split the token on the semicolon. There should be exactly 4 parts.
-                string[] parts = token.Split(';');
+                string[] parts = toParse.Split(';');
                 if (parts.Length != 4) return false;
 
                 // See if the values were entered as hex, like 0xC4.
@@ -175,6 +186,42 @@ namespace WowFovChanger
                 if (!byte.TryParse(parts[1], format[1], null, out fovInfo.byte1)) return false;
                 if (!byte.TryParse(parts[2], format[2], null, out fovInfo.byte2)) return false;
                 if (!byte.TryParse(parts[3], format[3], null, out fovInfo.byte3)) return false;
+
+                // Everything looks good, so call it good.
+                return true;
+            }
+
+            /// <summary>
+            /// Attempt to parse a string for individual bytes.
+            /// </summary>
+            /// <param name="toParse">The string to parse, either in decimal (1234) or hex (0xABCD) format.</param>
+            /// <param name="fovInfo">An instance of FovInfo with the parsed values.</param>
+            /// <returns>True if successful, false otherwise.</returns>
+            public static bool TryParseString(string toParse, out FovInfo fovInfo)
+            {
+                fovInfo = new FovInfo();
+
+                // Trim the string. There should be non-whitespace.
+                toParse = toParse.Trim();
+                if (toParse.Length <= 0) return false;
+
+                // See if the value was entered as hex, like 0xC4.
+                NumberStyles format = NumberStyles.Any;
+                if (toParse.ToLower().StartsWith("0x"))
+                {
+                    toParse = toParse.Substring(2).Trim();
+                    format = NumberStyles.HexNumber;
+                }
+
+                // Parse to an unsigned int. If it fails, abort.
+                uint parsed;
+                if (!uint.TryParse(toParse, format, null, out parsed)) return false;
+
+                // Take two bytes at a time.
+                fovInfo.byte0 = (byte)((parsed & 0xFF000000) / 0xFF0000);
+                fovInfo.byte1 = (byte)((parsed & 0xFF0000) / 0xFF00);
+                fovInfo.byte2 = (byte)((parsed & 0xFF00) / 0xFF);
+                fovInfo.byte3 = (byte)((parsed & 0xFF));
 
                 // Everything looks good, so call it good.
                 return true;
@@ -367,7 +414,7 @@ namespace WowFovChanger
                     // This order must match the order in ToString exactly.
                     int i = -1; // So we can insert fields without having to adjust a bunch of indices.
                     i++; if (!float.TryParse(fields[i], out BaseAspectRatio)) return false;
-                    i++; if (!FovInfo.TryParse(fields[i], out DefaultFov)) return false;
+                    i++; if (!FovInfo.TryParseTokens(fields[i], out DefaultFov)) return false;
                     i++; if (!Enum.TryParse(fields[i], out Expansion)) return false;
                     i++; if (!float.TryParse(fields[i], out FovRatio)) return false;
                     i++; Name = fields[i];
@@ -398,7 +445,7 @@ namespace WowFovChanger
             {
                 // This order must match the order in TryParse exactly.
                 return BaseAspectRatio.ToString() + ","
-                    + DefaultFov.ToString() + ","
+                    + DefaultFov.ToStringParsable() + ","
                     + Expansion.ToString() + ","
                     + FovRatio.ToString() + ","
                     + Name + ","
@@ -459,6 +506,12 @@ namespace WowFovChanger
         /// </summary>
         private void SetupComponent()
         {
+            // Do this here so it's easier to edit other panels in the designer.
+            this.Width = 403;
+            pnlMain.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            pnlHelp.Anchor = pnlOffsets.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom;
+            
+
             // Load information about supported files.
             SetupFileInfo();
         }
@@ -550,7 +603,7 @@ namespace WowFovChanger
             SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Tbc, 41, "TBC 2.4.3", 0x4b4004, 8272528, "2:4:3.8606"));
             SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Wrath, 50, "Wrath 3.3.5a", 0x5e7588, 7704216, "3:3:12340"));
             SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 32bit", 0x936888, 13154864, "5:4:8.18414"));
-            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 64bit", 0x7FFFFFFF, 20915760, "5:4:8.18414"));
+            SupportedFiles.Add(new FileInfo(16 / 9f, new FovInfo(0xDB, 0x0F, 0xC9, 0x3F), Expansion.Mists, 50, "Mists 5.4.8 64bit", 0xeaead4, 20915760, "5:4:8.18414"));
         }
 
         /// <summary>
@@ -583,6 +636,37 @@ namespace WowFovChanger
             txtOutput.ForeColor = normalColor;
         }
 
+
+        private void btnHelp_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Show/hide the help panel, then let the other function handle moving things.
+                int w = pnlHelp.Width;
+                Size min = this.MinimumSize;
+                if (pnlHelp.Visible)
+                {
+                    pnlHelp.Visible = false;
+                    this.MinimumSize = new Size(min.Width - w, min.Height);
+                    this.Width -= w;
+                    pnlMain.Width += w;
+                    btnHelp.Text = "Help >>";
+                }
+                else
+                {
+                    pnlHelp.Visible = true;
+                    this.Width += w;
+                    this.MinimumSize = new Size(min.Width + w, min.Height);
+                    pnlMain.Width -= w;
+                    btnHelp.Text = "Help <<";
+                }
+                RepositionPanels();
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
 
         private void txtFilename_TextChanged(object sender, EventArgs e)
         {
@@ -754,6 +838,37 @@ namespace WowFovChanger
             }
         }
 
+        private void btnOffsets_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Show/hide the offset panel, then let the other function handle moving things.
+                int w = pnlOffsets.Width;
+                Size min = this.MinimumSize;
+                if (pnlOffsets.Visible)
+                {
+                    pnlOffsets.Visible = false;
+                    this.MinimumSize = new Size(min.Width - w, min.Height);
+                    this.Width -= w;
+                    pnlMain.Width += w;
+                    btnOffsets.Text = ">>";
+                }
+                else
+                {
+                    pnlOffsets.Visible = true;
+                    this.Width += w;
+                    this.MinimumSize = new Size(min.Width + w, min.Height);
+                    pnlMain.Width -= w;
+                    btnOffsets.Text = "<<";
+                }
+                RepositionPanels();
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
         private void btnApply_Click(object sender, EventArgs e)
         {
             try
@@ -769,6 +884,7 @@ namespace WowFovChanger
         }
 
 
+
         /// <summary>
         /// Get filesize and version from the given executable.
         /// </summary>
@@ -776,7 +892,7 @@ namespace WowFovChanger
         /// <returns>A FileInfo object with the Size and Version set.</returns>
         private void GetFileInfo(string filename)
         {
-            // TODO: Check if file is 32-bit or 64-bit then act appropriately.
+            // TODO: Check if file is 32-bit or 64-bit then act appropriately. (May be un-required.)
 
             // Get the filesize so we can compare it to known executables.
             System.IO.FileInfo fi = new System.IO.FileInfo(txtFilename.Text); // Qualify the name so we're not conflicting with the local FileInfo class.
@@ -849,25 +965,8 @@ namespace WowFovChanger
             // Get the bytes from the executable.
             byte[] fileBytes = File.ReadAllBytes(txtFilename.Text);
 
-            // Make a backup of the executable. If we can't find a valid name in 1000 tries, don't worry about it.
-            string backupFilename;
-            DateTime timestamp = DateTime.Now;
-            int year = timestamp.Year;
-            int month = timestamp.Month;
-            int day = timestamp.Day;
-            int hour = timestamp.Hour;
-            int minute = timestamp.Minute;
-            int second = timestamp.Second;
-            string timestampString = String.Format("{0:D4}-{1:D2}-{2:D2} {3:D2}.{4:D2}.{5:D2}", year, month, day, hour, minute, second);
-            for (int i = 0; i < 1000; i++)
-            {
-                backupFilename = txtFilename.Text + "." + timestampString + "." + i.ToString() + ".bak";
-                if (!File.Exists(backupFilename))
-                {
-                    File.WriteAllBytes(backupFilename, fileBytes);
-                    break;
-                }
-            }
+            // Make a backup of the executable.
+            BackupFile(txtFilename.Text, fileBytes);
 
             // Set the new fov in the bytes.
             SetFovAtOffset(ref fileBytes, SupportedFiles[cboSupportedInfo.SelectedIndex].Offset);
@@ -877,6 +976,40 @@ namespace WowFovChanger
 
             // We're done, yay.
             DisplayMessage("Update success!");
+        }
+
+        /// <summary>
+        /// Given a filename, create a backup filename and save the given bytes to it.
+        /// </summary>
+        /// <param name="filename">The original filename.</param>
+        /// <param name="fileBytes">The bytes to save.</param>
+        private void BackupFile(string filename, byte[] fileBytes)
+        {
+            // Get a datetime string like YYYY-MM-DD hh.mm.ss, formatted for the current time.
+            DateTime timestamp = DateTime.Now;
+            int year = timestamp.Year;
+            int month = timestamp.Month;
+            int day = timestamp.Day;
+            int hour = timestamp.Hour;
+            int minute = timestamp.Minute;
+            int second = timestamp.Second;
+            string timestampString = String.Format("{0:D4}-{1:D2}-{2:D2} {3:D2}.{4:D2}.{5:D2}", year, month, day, hour, minute, second);
+
+            // If we can't find a valid name in 1000 tries, don't worry about it.
+            for (int i = 0; i < 1000; i++)
+            {
+                // Add the datetime string, plus a number between 0 and 999 and a backup prefix, to the original filename.
+                filename += "." + timestampString + "." + i.ToString() + ".bak";
+
+                // If it doesn't already exist, write to this filename.
+                if (!File.Exists(filename))
+                {
+                    File.WriteAllBytes(filename, fileBytes);
+                    break;
+                }
+            }
+            // If we make it to this point, there were already 1000 other backup files made in the current second.
+            // If there were that many files, something probably broke, so just quit.
         }
 
         /// <summary>
@@ -1006,6 +1139,289 @@ namespace WowFovChanger
             return "0x" + hex;
         }
 
+        /// <summary>
+        /// Move the help and offset panels as needed when they're visible.
+        /// </summary>
+        private void RepositionPanels()
+        {
+            // Help panel always goes right next to the main panel.
+            pnlHelp.Left = pnlMain.Left + pnlMain.Width;
 
+            // Offset panel goes to the far right.
+            int helpOffset = (pnlHelp.Visible) ? pnlHelp.Width : 0;
+            pnlOffsets.Left = pnlHelp.Left + helpOffset;
+        }
+
+
+        /// <summary>
+        /// Holds offsets for matching bytes on the offsets panel.
+        /// </summary>
+        private List<int> offsets = new List<int>(0);
+
+        /// <summary>
+        /// Stores a true/false value indicating whether the data at this offset has been modified.
+        /// </summary>
+        private List<bool> offsetsModified = new List<bool>(0);
+
+        /// <summary>
+        /// Stores the filename we searching in the offsets panel, in case it gets changed on the main panel.
+        /// </summary>
+        private string offsetsFilename = "";
+
+        private void btnFromDefault_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                if (SupportedFiles != null && cboSupportedInfo.SelectedIndex < SupportedFiles.Count)
+                {
+                    FileInfo fi = SupportedFiles[cboSupportedInfo.SelectedIndex];
+
+                    txtBytes.Text = fi.DefaultFov.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // If there's not a file to load, abort.
+                if (!isFilenameValid) return;
+
+                // Store the filename for later.
+                offsetsFilename = txtFilename.Text;
+
+                // Get the search bytes. If it fails, abort.
+                FovInfo bytesToSearch;
+                if (!FovInfo.TryParseString(txtBytes.Text, out bytesToSearch)) return;
+
+                // Get the entire file as a byte array.
+                byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
+
+                // Ready our data.
+                offsets.Clear();
+                offsetsModified.Clear();
+                lbxOffsets.Items.Clear();
+
+                // Loop through the array. Start byte can't go past 4th from the end.
+                for (int i = 0; i < (fileBytes.Length - 3); i++)
+                {
+                    // If any byte doesn't match, go to the next set of bytes.
+                    if (fileBytes[i] != bytesToSearch.byte0) continue;
+                    if (fileBytes[i+1] != bytesToSearch.byte1) continue;
+                    if (fileBytes[i+2] != bytesToSearch.byte2) continue;
+                    if (fileBytes[i+3] != bytesToSearch.byte3) continue;
+
+                    // If all the bytes matched, record this offset.
+                    offsets.Add(i);
+                    offsetsModified.Add(false);
+                    lbxOffsets.Items.Add(String.Format("0x{0:X}", i));
+                }
+
+                // Setup the buttons if items were found.
+                bool hasItems = (offsets.Count > 0);
+                if (!hasItems) DisplayMessage("No matches found.");
+                btnReset.Enabled
+                    = btnSetAll.Enabled 
+                    = btnSetSelected.Enabled 
+                    = btnRevertAll.Enabled
+                    = hasItems;
+                txtBytes.Enabled = btnFromDefault.Enabled = !hasItems;
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // Clear the data.
+                offsets.Clear();
+                offsetsModified.Clear();
+                lbxOffsets.Items.Clear();
+                btnReset.Enabled
+                    = btnSetAll.Enabled
+                    = btnSetSelected.Enabled
+                    = btnRevertAll.Enabled
+                    = false;
+                txtBytes.Enabled = btnFromDefault.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        // From https://stackoverflow.com/a/63327860/5313933
+        private void lbxOffsets_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            // 1. Get the item
+            string selectedItem = lbxOffsets.Items[e.Index].ToString();
+
+            // 2. Choose font 
+            Font font = new Font("Microsoft Sans Serif", 8.25f);
+
+            // 3. Choose colour
+            SolidBrush solidBrush;
+            if (offsetsModified[e.Index]) solidBrush = new SolidBrush(Color.Red);
+            else solidBrush = new SolidBrush(SystemColors.WindowText);
+
+            // 4. Get bounds
+            int left = e.Bounds.Left;
+            int top = e.Bounds.Top;
+
+            // 5. Use Draw the background within the bounds
+            e.DrawBackground();
+
+            // 6. Colorize listbox items
+            e.Graphics.DrawString(selectedItem, font, solidBrush, left, top);
+        }
+
+        private void btnFromFov_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                float fovTemp;
+                if (!float.TryParse(txtNew.Text, out fovTemp)) return;
+                FovInfo fov = new FovInfo(fovTemp);
+                txtNewBytes.Text = fov.ToString();
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnSetAll_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // If there's no output value, quit.
+                FovInfo fovToWrite;
+                if (!FovInfo.TryParseString(txtNewBytes.Text, out fovToWrite)) return;
+
+                // Get the entire file as a byte array.
+                byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
+
+                // Make a backup of the executable.
+                BackupFile(offsetsFilename, fileBytes);
+
+                // Go through each offset in the list.
+                for (int i = 0; i < offsets.Count; i++)
+                {
+                    // Set the bytes at this offset.
+                    fileBytes[offsets[i]] = fovToWrite.byte0;
+                    fileBytes[offsets[i] + 1] = fovToWrite.byte1;
+                    fileBytes[offsets[i] + 2] = fovToWrite.byte2;
+                    fileBytes[offsets[i] + 3] = fovToWrite.byte3;
+
+                    // Tell the listbox this item's been modified.
+                    offsetsModified[i] = true;
+                }
+
+                // Save the bytes back to the executable.
+                File.WriteAllBytes(offsetsFilename, fileBytes);
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnSetSelected_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // If there's no output value, quit.
+                FovInfo fovToWrite;
+                if (!FovInfo.TryParseString(txtNewBytes.Text, out fovToWrite)) return;
+
+                // Get the entire file as a byte array.
+                byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
+
+                // Make a backup of the executable.
+                BackupFile(offsetsFilename, fileBytes);
+
+                // Go through each selected offset in the listbox.
+                for (int i = 0; i < lbxOffsets.SelectedIndices.Count; i++)
+                {
+                    // i tells us which selected index we're on. Use that to get the offset index.
+                    int j = lbxOffsets.SelectedIndices[i];
+
+                    // Set the bytes at this offset.
+                    fileBytes[offsets[j]] = fovToWrite.byte0;
+                    fileBytes[offsets[j] + 1] = fovToWrite.byte1;
+                    fileBytes[offsets[j] + 2] = fovToWrite.byte2;
+                    fileBytes[offsets[j] + 3] = fovToWrite.byte3;
+
+                    // Tell the listbox this item's been modified.
+                    offsetsModified[j] = true;
+                }
+
+                // Save the bytes back to the executable.
+                File.WriteAllBytes(offsetsFilename, fileBytes);
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
+
+        private void btnRevertAll_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ClearOutput();
+
+                // If there's no output value, quit. If this happens, there's a problem though.
+                FovInfo bytesToSearch;
+                if (!FovInfo.TryParseString(txtBytes.Text, out bytesToSearch)) return;
+
+                // Get the entire file as a byte array.
+                byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
+
+                // Make a backup of the executable.
+                BackupFile(offsetsFilename, fileBytes);
+
+                // Go through each offset in the list.
+                for (int i = 0; i < offsets.Count; i++)
+                {
+                    // Set the bytes at this offset.
+                    fileBytes[offsets[i]] = bytesToSearch.byte0;
+                    fileBytes[offsets[i] + 1] = bytesToSearch.byte1;
+                    fileBytes[offsets[i] + 2] = bytesToSearch.byte2;
+                    fileBytes[offsets[i] + 3] = bytesToSearch.byte3;
+
+                    // Tell the listbox this item's now unmodified.
+                    offsetsModified[i] = false;
+                }
+
+                // Save the bytes back to the executable.
+                File.WriteAllBytes(offsetsFilename, fileBytes);
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+        }
     }
 }
