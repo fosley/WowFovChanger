@@ -1268,6 +1268,9 @@ namespace WowFovChanger
         // From https://stackoverflow.com/a/63327860/5313933
         private void lbxOffsets_DrawItem(object sender, DrawItemEventArgs e)
         {
+            // Can't process a non-existent item.
+            if (e.Index < 0) return;
+
             // 1. Get the item
             string selectedItem = lbxOffsets.Items[e.Index].ToString();
 
@@ -1338,6 +1341,9 @@ namespace WowFovChanger
 
                 // Save the bytes back to the executable.
                 File.WriteAllBytes(offsetsFilename, fileBytes);
+
+                // Refresh the listbox colors.
+                lbxOffsets.Invalidate();
             }
             catch (Exception ex)
             {
@@ -1379,6 +1385,9 @@ namespace WowFovChanger
 
                 // Save the bytes back to the executable.
                 File.WriteAllBytes(offsetsFilename, fileBytes);
+
+                // Refresh the listbox colors.
+                lbxOffsets.Invalidate();
             }
             catch (Exception ex)
             {
@@ -1417,6 +1426,9 @@ namespace WowFovChanger
 
                 // Save the bytes back to the executable.
                 File.WriteAllBytes(offsetsFilename, fileBytes);
+
+                // Refresh the listbox colors.
+                lbxOffsets.Invalidate();
             }
             catch (Exception ex)
             {
