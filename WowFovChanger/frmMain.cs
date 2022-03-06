@@ -876,6 +876,8 @@ namespace WowFovChanger
                 ClearOutput();
 
                 SetNewWanBytes();
+
+                GetCurrentWanBytes(); // Could probably just set the textbox directly.
             }
             catch (Exception ex)
             {
@@ -965,8 +967,8 @@ namespace WowFovChanger
             // Get the bytes from the executable.
             byte[] fileBytes = File.ReadAllBytes(txtFilename.Text);
 
-            // Make a backup of the executable.
-            BackupFile(txtFilename.Text, fileBytes);
+            // Make a backup of the executable, if desired.
+            if (chkBackup.Checked) BackupFile(txtFilename.Text, fileBytes);
 
             // Set the new fov in the bytes.
             SetFovAtOffset(ref fileBytes, SupportedFiles[cboSupportedInfo.SelectedIndex].Offset);
@@ -1135,7 +1137,7 @@ namespace WowFovChanger
         /// <returns>A hex value in a formatted string.</returns>
         private string GetHex(int dec)
         {
-            string hex = Convert.ToString(dec, 16);
+            string hex = Convert.ToString(dec, 16).ToUpper();
             return "0x" + hex;
         }
 
@@ -1223,7 +1225,7 @@ namespace WowFovChanger
                     // If all the bytes matched, record this offset.
                     offsets.Add(i);
                     offsetsModified.Add(false);
-                    lbxOffsets.Items.Add(String.Format("0x{0:X}", i));
+                    lbxOffsets.Items.Add(GetHex(i));
                 }
 
                 // Setup the buttons if items were found.
@@ -1323,8 +1325,8 @@ namespace WowFovChanger
                 // Get the entire file as a byte array.
                 byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
 
-                // Make a backup of the executable.
-                BackupFile(offsetsFilename, fileBytes);
+                // Make a backup of the executable, if desired.
+                if (chkBackup.Checked) BackupFile(offsetsFilename, fileBytes);
 
                 // Go through each offset in the list.
                 for (int i = 0; i < offsets.Count; i++)
@@ -1364,8 +1366,8 @@ namespace WowFovChanger
                 // Get the entire file as a byte array.
                 byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
 
-                // Make a backup of the executable.
-                BackupFile(offsetsFilename, fileBytes);
+                // Make a backup of the executable, if desired.
+                if (chkBackup.Checked) BackupFile(offsetsFilename, fileBytes);
 
                 // Go through each selected offset in the listbox.
                 for (int i = 0; i < lbxOffsets.SelectedIndices.Count; i++)
@@ -1408,8 +1410,8 @@ namespace WowFovChanger
                 // Get the entire file as a byte array.
                 byte[] fileBytes = File.ReadAllBytes(offsetsFilename);
 
-                // Make a backup of the executable.
-                BackupFile(offsetsFilename, fileBytes);
+                // Make a backup of the executable, if desired.
+                if (chkBackup.Checked) BackupFile(offsetsFilename, fileBytes);
 
                 // Go through each offset in the list.
                 for (int i = 0; i < offsets.Count; i++)

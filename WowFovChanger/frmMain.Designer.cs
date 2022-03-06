@@ -85,6 +85,7 @@ namespace WowFovChanger
             this.btnSearch = new System.Windows.Forms.Button();
             this.lblBytes = new System.Windows.Forms.Label();
             this.txtBytes = new System.Windows.Forms.TextBox();
+            this.chkBackup = new System.Windows.Forms.CheckBox();
             this.pnlMain.SuspendLayout();
             this.pnlHelp.SuspendLayout();
             this.pnlOffsets.SuspendLayout();
@@ -150,7 +151,7 @@ namespace WowFovChanger
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtNew.Location = new System.Drawing.Point(3, 495);
             this.txtNew.Name = "txtNew";
-            this.txtNew.Size = new System.Drawing.Size(315, 20);
+            this.txtNew.Size = new System.Drawing.Size(243, 20);
             this.txtNew.TabIndex = 28;
             this.txtNew.TextChanged += new System.EventHandler(this.txtNew_TextChanged);
             // 
@@ -177,7 +178,7 @@ namespace WowFovChanger
             // btnDefault
             // 
             this.btnDefault.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDefault.Location = new System.Drawing.Point(320, 494);
+            this.btnDefault.Location = new System.Drawing.Point(248, 494);
             this.btnDefault.Name = "btnDefault";
             this.btnDefault.Size = new System.Drawing.Size(62, 20);
             this.btnDefault.TabIndex = 30;
@@ -407,6 +408,7 @@ namespace WowFovChanger
             // 
             this.pnlMain.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.pnlMain.Controls.Add(this.chkBackup);
             this.pnlMain.Controls.Add(this.btnOffsets);
             this.pnlMain.Controls.Add(this.btnHelp);
             this.pnlMain.Controls.Add(this.lblFilename);
@@ -488,9 +490,9 @@ namespace WowFovChanger
             this.txtHelp6.AutoSize = true;
             this.txtHelp6.Location = new System.Drawing.Point(3, 526);
             this.txtHelp6.Name = "txtHelp6";
-            this.txtHelp6.Size = new System.Drawing.Size(51, 13);
+            this.txtHelp6.Size = new System.Drawing.Size(246, 13);
             this.txtHelp6.TabIndex = 5;
-            this.txtHelp6.Text = "Hit apply.";
+            this.txtHelp6.Text = "Hit apply. If Backup is checked, saves a copy first.";
             // 
             // lblHelp5
             // 
@@ -678,14 +680,26 @@ namespace WowFovChanger
             this.txtBytes.Size = new System.Drawing.Size(188, 20);
             this.txtBytes.TabIndex = 100;
             // 
+            // chkBackup
+            // 
+            this.chkBackup.AutoSize = true;
+            this.chkBackup.Checked = true;
+            this.chkBackup.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkBackup.Location = new System.Drawing.Point(313, 497);
+            this.chkBackup.Name = "chkBackup";
+            this.chkBackup.Size = new System.Drawing.Size(69, 17);
+            this.chkBackup.TabIndex = 35;
+            this.chkBackup.Text = "Backup?";
+            this.chkBackup.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(695, 549);
+            this.Controls.Add(this.pnlMain);
             this.Controls.Add(this.pnlOffsets);
             this.Controls.Add(this.pnlHelp);
-            this.Controls.Add(this.pnlMain);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(167, 588);
             this.Name = "frmMain";
@@ -758,6 +772,7 @@ namespace WowFovChanger
         private System.Windows.Forms.Button btnRevertAll;
         private System.Windows.Forms.Button btnSetSelected;
         private System.Windows.Forms.Button btnSetAll;
+        private System.Windows.Forms.CheckBox chkBackup;
     }
 }
 
